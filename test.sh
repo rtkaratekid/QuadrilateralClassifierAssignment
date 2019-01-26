@@ -1,5 +1,5 @@
-./main < input.txt > output.txt
-diff output.txt expectedOutput.txt
+./main < quadTest.txt > output.txt
+diff output.txt quadAnswers.txt
 error=$?
 if [ $error -eq 0 ]
 then
