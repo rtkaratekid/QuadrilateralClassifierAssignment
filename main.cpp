@@ -35,16 +35,6 @@ double slope(int x0, int y0, int x1, int y1){
     return (y1 - y0) / (x1 - x0);
 }
 
-// to find the angle of two intersecting lines using arccos
-// https://stackoverflow.com/questions/1211212/how-to-calculate-an-angle-from-three-points
-// formula: arccos((P122 + P132 - P232) / (2 * P12 * P13))
-double angle(int x0, int y0, int x1, int y1, int x2, int y2){
-    double dist1 = length(x0, x1, y0, y1);
-    double dist2 = length(x0, x2, y0, y2);
-    double dist3 = length(x1, x2, y1, y2);
-    return acos((pow(dist1,2) + pow(dist2, 2) - pow(dist3, 2)) / (2 * dist1 * dist2));
-}
-
 // to determine if a quadrilateral is a square
 bool isSquare(Quadrilateral q){
     if(q.x1 == q.x2 && q.x1 == q.y2 && q.x1 == q.y3 && q.y1 == q.x3){
