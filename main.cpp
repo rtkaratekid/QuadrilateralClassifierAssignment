@@ -10,6 +10,10 @@
 #include <string>
 #include <cmath>
 
+// cases 19 and 14 wrong
+// 14: quadrilateral, was trapezoid
+// 19: parallelogram, was trapezoid
+
 // to store the coordinates easily
 struct Quadrilateral{
     double x1, y1, x2, y2, x3, y3;
@@ -23,15 +27,12 @@ public: void resetValues(){
 };
 
 // to find the distance between two points
-double length(int x0, int y0, int x1, int y1){
+double length(double x0, double y0, double x1, double y1){
     return sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2));
 }
 
 // to find the slope of a line with two points
-double slope(int x0, int y0, int x1, int y1){
-    if(x0 == x1){
-        return NULL;
-    }
+double slope(double x0, double y0, double x1, double y1){
     return (y1 - y0) / (x1 - x0);
 }
 
@@ -86,7 +87,10 @@ bool isParallelogram(Quadrilateral& q){
 
 // to determine if it's a trapezoid
 bool isTrapezoid(Quadrilateral q){
-    
+    std::cout<<q.slope01<<std::endl;
+    std::cout<<q.slope12<<std::endl;
+    std::cout<<q.slope23<<std::endl;
+    std::cout<<q.slope30<<std::endl;
     if((q.slope01 == q.slope23) && (q.slope12 != q.slope30)){
         return true;
         // if top and bottom are parallel and left and right are not
