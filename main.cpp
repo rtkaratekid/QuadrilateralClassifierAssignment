@@ -7,18 +7,18 @@
 //
 
 #include <iostream>
+#include <sstream>  //for std::istringstream
+#include <iterator> //for std::istream_iterator
+#include <vector>   //for std::vector
 #include <string>
 #include <cmath>
-
-// cases 19 and 14 wrong
-// 14: quadrilateral, was trapezoid
-// 19: parallelogram, was trapezoid
 
 // to store the coordinates easily
 struct Quadrilateral{
     double x1, y1, x2, y2, x3, y3;
     double len01, len12, len23, len30;
     double slope01, slope12, slope23, slope30;
+    std::vector<std::string> tokens;
 public: void resetValues(){
         x1 = 0; x2 = 0; x3 = 0; y1 = 0; y2 = 0;y3 = 0;
         len01 = 0; len12 = 0; len23 = 0; len30 = 0;
@@ -33,7 +33,155 @@ double length(double x0, double y0, double x1, double y1){
 
 // to find the slope of a line with two points
 double slope(double x0, double y0, double x1, double y1){
+    if(x0 == x1){
+        return (y1 - y0) / (x1 - x0);
+        //return NULL;
+    }
     return (y1 - y0) / (x1 - x0);
+}
+
+/*
+ "error 2" -- if any two points coincide
+ "error 3" -- if any two line segments representing sides cross each other
+ "error 4" -- if any three points are colinear
+ */
+
+bool hasInvalidPoints(Quadrilateral& q){
+    // to check for the correct number of inputs
+    if(q.tokens.size() != 6){
+        return true;
+    }
+    
+    // checking the ascii to make sure each char is an int
+    for(std::string s : q.tokens){
+        for(char c : s){
+            if(c < 48 || c > 57){
+                return true;
+            }
+        }
+    }
+    
+    q.x1 = std::stod(q.tokens[0]);
+    q.y1 = std::stod(q.tokens[1]);
+    q.x2 = std::stod(q.tokens[2]);
+    q.y2 = std::stod(q.tokens[3]);
+    q.x3 = std::stod(q.tokens[4]);
+    q.y3 = std::stod(q.tokens[5]);
+    
+    // check if coordinates are outside range
+    if(100 < q.x1 || 0 > q.x1){
+        return true;
+    } else if(100 < q.x2 || 0 > q.x2){
+        return true;
+    } else if(100 < q.x3 || 0 > q.x3){
+        return true;
+    } else if(100 < q.y1 || 0 > q.y1){
+        return true;
+    } else if(100 < q.y2 || 0 > q.y2){
+        return true;
+    } else if(100 < q.y3 || 0 > q.y3){
+        return true;
+    }
+    return false;
+}
+
+// to see if any of the points are the same
+bool pointsCoincide(Quadrilateral q){
+    if(q.x1 == q.x2 && q.y1 == q.y2){
+        return true;
+    } else if(q.x2 == q.x3 && q.y2 == q.y3){
+        return true;
+    } else if(q.x1 == q.x3 && q.y1 == q.y3){
+        return true;
+    } else if(q.x1 == 0 && q.y1 == 0){
+        return true;
+    } else if(q.x2 == 0 && q.y2 == 0){
+        return true;
+    } else if(q.x3 == 0 && q.y3 == 0){
+        return true;
+    }
+    return false;
+}
+
+// To find orientation of three points
+// The function returns following values
+// 0 --> p, q and r are colinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+int orientation(int x1, int y1, int x2, int y2, int x3, int y3){
+    // See https://www.geeksforgeeks.org/orientation-3-ordered-points/
+    // for details of below formula.
+    int val = (y2 - y1) * (x3 - x2) -
+    (x2 - x1) * (y3 - y2);
+    
+    if (val == 0) return 0;  // colinear
+    
+    return (val > 0)? 1: 2; // clock or counterclock wise
+}
+
+bool linesCross(Quadrilateral q){
+    /*
+     Two segments (p1,q1) and (p2,q2) intersect if and only if one of the following two conditions is verified
+     1. General Case:
+     – (p1, q1, p2) and (p1, q1, q2) have different orientations and
+     – (p2, q2, p1) and (p2, q2, q1) have different orientations.
+     */
+    //check line 1 and 3
+    if((orientation(0, 0, q.x2, q.y2, q.x1, q.y1) != orientation(0, 0, q.x2, q.y2, q.x3, q.y3)) &&
+       (orientation(q.x1, q.y1, q.x3, q.y3, 0, 0) != orientation(q.x1, q.x1, q.x3, q.y3, q.x2, q.y2))){
+        return true;
+        // check lines 2 and 4
+    } else if((orientation(q.x1, q.y1, q.x3, q.y3, q.x2, q.y2) != orientation(q.x1, q.x1, q.x3, q.y3, 0, 0)) &&
+       (orientation(q.x2, q.y2, 0, 0, q.x1, q.y1) != orientation(q.x2, q.x2, 0, 0, q.x3, q.y3))){
+        return true;
+    }
+    
+    return false;
+}
+
+bool hasColinearity(Quadrilateral q){
+    //1 0 3 0 2 1
+        // 012
+    if((q.x1 == q.x2 && q.x2 == 0) ||
+       (q.y1 == q.y2 && q.y2 == 0)){
+        return true;
+        
+        // 123
+    } else if((q.x1 == q.x2 && q.x2 == q.x3) ||
+              (q.y1 == q.y2 && q.y2 == q.y3)){
+        return true;
+        
+        // 230
+    } else if((q.x3 == q.x2 && q.x3 == 0) ||
+              (q.y3 == q.y2 && q.y3 == 0)){
+        return true;
+        
+        // 301
+    } else if((q.x1 == q.x3 && q.x3 == 0) ||
+              (q.y1 == q.y3 && q.y3 == 0)){
+        return true;
+    }
+    
+    return false;
+}
+
+bool hasValidInputs(Quadrilateral& q){
+    if(hasInvalidPoints(q)){
+        std::cout<<"error 1";
+        return false;
+    } else if (pointsCoincide(q)){
+        std::cout<<"error 2";
+        return false;
+    } else if (linesCross(q)){
+        std::cout<<"error 3";
+        return false;
+    } else if (hasColinearity(q)){
+        std::cout<<"error 4";
+        return false;
+    }
+    
+    
+    return true;
 }
 
 // to determine if a quadrilateral is a square
@@ -87,10 +235,6 @@ bool isParallelogram(Quadrilateral& q){
 
 // to determine if it's a trapezoid
 bool isTrapezoid(Quadrilateral q){
-    std::cout<<q.slope01<<std::endl;
-    std::cout<<q.slope12<<std::endl;
-    std::cout<<q.slope23<<std::endl;
-    std::cout<<q.slope30<<std::endl;
     if((q.slope01 == q.slope23) && (q.slope12 != q.slope30)){
         return true;
         // if top and bottom are parallel and left and right are not
@@ -114,6 +258,9 @@ bool isKite(Quadrilateral q){
 }
 
 void typeOfQuadrilateral(Quadrilateral q){
+    if(!hasValidInputs(q)){
+        exit(0);
+    }
     if(isSquare(q)){
         std::cout << "square\n";
         return;
@@ -140,7 +287,17 @@ int main(int argc, const char * argv[]) {
     // hopefully this is saying: while we are not at the end of the file, run this chunk of code
     while(!std::cin.eof()){
         Quadrilateral quad;
-        std::cin >> quad.x1 >> quad.y1 >> quad.x2 >> quad.y2 >> quad.x3 >> quad.y3;
+        std::string input;
+        //std::cin >> quad.x1 >> quad.y1 >> quad.x2 >> quad.y2 >> quad.x3 >> quad.y3;
+        std::getline(std::cin, input);
+        std::istringstream ss(input);
+        
+        std::istream_iterator<std::string> begin(ss), end;
+        
+        //putting all the tokens in the vector
+        std::vector<std::string> arrayTokens(begin, end);
+        quad.tokens = arrayTokens;
+        
         typeOfQuadrilateral(quad);
         quad.resetValues();
     }
