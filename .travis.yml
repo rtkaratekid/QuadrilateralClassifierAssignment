@@ -1,6 +1,0 @@
-language: cpp
-script: scons
-compiler: clang++
-os: osx
-
-script: make && make test
