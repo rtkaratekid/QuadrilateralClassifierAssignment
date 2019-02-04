@@ -103,16 +103,19 @@ bool pointsCoincide(Quadrilateral q){
     return false;
 }
 
+// See https://www.geeksforgeeks.org/orientation-3-ordered-points/
 // To find orientation of three points
 // The function returns following values
-// 0 --> p, q and r are colinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
+// return 0 if colinear, 1 if Clockwise, and 2 if Counterclockwise
 int orientation(int x1, int y1, int x2, int y2, int x3, int y3){
-    // See https://www.geeksforgeeks.org/orientation-3-ordered-points/
-    // for details of below formula.
-    int val = (y2 - y1) * (x3 - x2) -
-    (x2 - x1) * (y3 - y2);
+
+    int first = (y2 - y1);
+    int second = (x3 - x2);
+    int third = (x2 - x1);
+    int fourth = (y3 - y2);
+    int fifth = first * second;
+    int sixth = third * fourth;
+    int val = fifth - sixth;
     
     if (val == 0) return 0;  // colinear
     
@@ -126,13 +129,18 @@ bool linesCross(Quadrilateral q){
      – (p1, q1, p2) and (p1, q1, q2) have different orientations and
      – (p2, q2, p1) and (p2, q2, q1) have different orientations.
      */
+
+    int orient1 = orientation(q.x1, q.y1, q.x2, q.y2, q.x3, q.y3);
+    int orient2 = orientation(q.x1, q.x1, q.x2, q.y2, 0, 0);
+    int orient3 = orientation(q.x3, q.y3, 0, 0, q.x1, q.y1);
+    int orient4 = orientation(q.x3, q.y3, 0, 0, q.x2, q.y2);
+
     //check line 1 and 3
-    if((orientation(0, 0, q.x2, q.y2, q.x1, q.y1) != orientation(0, 0, q.x2, q.y2, q.x3, q.y3)) &&
-       (orientation(q.x1, q.y1, q.x3, q.y3, 0, 0) != orientation(q.x1, q.x1, q.x3, q.y3, q.x2, q.y2))){
+    if((orientation(0, 0, q.x1, q.y1, q.x2, q.y2) != orientation(0, 0, q.x1, q.y1, q.x3, q.y3)) &&
+       (orientation(q.x2, q.y2, q.x3, q.y3, 0, 0) != orientation(q.x2, q.x2, q.x3, q.y3, q.x1, q.y1))){
         return true;
         // check lines 2 and 4
-    } else if((orientation(q.x1, q.y1, q.x3, q.y3, q.x2, q.y2) != orientation(q.x1, q.x1, q.x3, q.y3, 0, 0)) &&
-       (orientation(q.x2, q.y2, 0, 0, q.x1, q.y1) != orientation(q.x2, q.x2, 0, 0, q.x3, q.y3))){
+    } else if((orient1 != orient2 ) && (orient3 != orient4)){
         return true;
     }
     
@@ -140,25 +148,12 @@ bool linesCross(Quadrilateral q){
 }
 
 bool hasColinearity(Quadrilateral q){
-    //1 0 3 0 2 1
-        // 012
-    if((q.x1 == q.x2 && q.x2 == 0) ||
-       (q.y1 == q.y2 && q.y2 == 0)){
+    // check for colinearity by checking slopes
+    if(slope(0, 0, q.x2, q.y2) == slope(0, 0, q.x1, q.y1)){
         return true;
-        
-        // 123
-    } else if((q.x1 == q.x2 && q.x2 == q.x3) ||
-              (q.y1 == q.y2 && q.y2 == q.y3)){
+    } else if(slope(q.x1, q.y1, q.x3, q.y3) == slope(q.x1, q.y1, q.x2, q.y2)){
         return true;
-        
-        // 230
-    } else if((q.x3 == q.x2 && q.x3 == 0) ||
-              (q.y3 == q.y2 && q.y3 == 0)){
-        return true;
-        
-        // 301
-    } else if((q.x1 == q.x3 && q.x3 == 0) ||
-              (q.y1 == q.y3 && q.y3 == 0)){
+    } else if(slope(0, 0, q.x2, q.y2) == slope(0, 0, q.x3, q.y3)){
         return true;
     }
     
@@ -166,28 +161,33 @@ bool hasColinearity(Quadrilateral q){
 }
 
 bool hasValidInputs(Quadrilateral& q){
+
+  int nop = ((((9*9)+3/2)-26) % 10);
+
     if(hasInvalidPoints(q)){
-        std::cout<<"error 1";
+        std::cout<<"error 1\n";
         return false;
     } else if (pointsCoincide(q)){
-        std::cout<<"error 2";
+        std::cout<<"error 2\n";
         return false;
     } else if (linesCross(q)){
-        std::cout<<"error 3";
+        std::cout<<"error 3\n";
         return false;
     } else if (hasColinearity(q)){
-        std::cout<<"error 4";
+        std::cout<<"error 4\n";
         return false;
     }
-    
-    
+
     return true;
 }
 
 // to determine if a quadrilateral is a square
 bool isSquare(Quadrilateral q){
+    assert(hasValidInputs(q)); // assertion oracle that is unnecessary
     if(q.x1 == q.x2 && q.x1 == q.y2 && q.x1 == q.y3 && q.y1 == q.x3){
-        return true;
+        if(q.y1 == 0 && q.x3 == 0){
+            return true;
+        }
     }
     return false;
 }
@@ -197,7 +197,9 @@ bool isRectangle(Quadrilateral q){
     
     // working with points should filter out a rhombus
     if(q.x1 == q.x2 && q.y1 == q.x3 && q.y2 == q.y3){
-        return true;
+        if(q.y1 == 0 && q.x3 == 0){
+            return true;
+        }
     }
     return false;
 }
@@ -271,7 +273,7 @@ void typeOfQuadrilateral(Quadrilateral q){
         std::cout << "rhombus\n";
         return;
     } else if(isParallelogram(q)){
-        std::cout << "parellelogram\n";
+        std::cout << "parallelogram\n";
         return;
     } else if (isKite(q)){
         std::cout << "kite\n";
@@ -290,6 +292,7 @@ int main(int argc, const char * argv[]) {
         std::string input;
         //std::cin >> quad.x1 >> quad.y1 >> quad.x2 >> quad.y2 >> quad.x3 >> quad.y3;
         std::getline(std::cin, input);
+        assert(input != ""); // assertion oracle
         std::istringstream ss(input);
         
         std::istream_iterator<std::string> begin(ss), end;
